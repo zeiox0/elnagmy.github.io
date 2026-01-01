@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ELNAGMY - شركة متخصصة في التجارة والتوريدات والوساطة التجارية">
+    <meta name="theme-color" content="#2c244b">
+    <title>ELNAGMY | التجارة والتوريدات</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style-enhanced.css">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="brand-container">
+                <img src="logo.jpeg" alt="ELNAGMY Logo" class="logo-img">
+                <div class="brand-text">
+                    <span class="company-name">ELNAGMY</span>
+                    <span class="company-sub">Trade & Supplies</span>
+                </div>
+            </div>
+            
+            <nav class="nav-controls">
+                <button id="langBtn" class="glass-btn" aria-label="تبديل اللغة">English</button>
+                <button id="adminBtn" class="glass-btn icon-only" aria-label="لوحة التحكم"><i class="fas fa-user-shield"></i></button>
+                <button id="menuBtn" class="glass-btn icon-only mobile-menu-btn" aria-label="القائمة"><i class="fas fa-bars"></i></button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 id="heroTitle" class="hero-title">التميز في التوريدات والتجارة</h1>
+            <p id="heroSubtitle" class="hero-subtitle">شريكك الموثوق للحلول التجارية والوساطة</p>
+            <div class="gold-line"></div>
+        </div>
+    </section>
+
+    <!-- ADMIN PANEL -->
+    <div id="adminPanel" class="admin-panel glass-card">
+        <div class="panel-header">
+            <h3><i class="fas fa-crown"></i> <span id="adminTitle">لوحة التحكم</span></h3>
+            <button id="closeAdmin" class="close-btn" aria-label="إغلاق"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="form-section">
+            <div class="input-group">
+                <input type="text" id="pNameAr" placeholder="اسم المنتج (عربي)" required>
+                <input type="text" id="pNameEn" placeholder="Product Name (English)">
+            </div>
+            
+            <div class="input-group">
+                <input type="number" id="pPrice" placeholder="السعر (EGP)" min="0" step="0.01" required>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="pImage" accept="image/*" class="file-input" required>
+                    <label for="pImage"><i class="fas fa-camera"></i> <span id="imgLabel">اختر صورة</span></label>
+                </div>
+            </div>
+
+            <textarea id="pDescAr" placeholder="وصف دقيق (عربي)" rows="3"></textarea>
+            <textarea id="pDescEn" placeholder="Description (English)" rows="3"></textarea>
+            
+            <button id="addBtn" class="action-btn" aria-label="نشر المنتج">
+                <span id="addBtnText">نشر المنتج</span> <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- SEARCH & FILTER -->
+    <div id="filterSection" class="filter-section" style="display: none;">
+        <div class="container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="ابحث عن منتج...">
+            </div>
+            <div class="filter-controls">
+                <button class="filter-btn active" data-filter="all"><span id="filterAll">الكل</span></button>
+                <button class="filter-btn" data-filter="recent"><span id="filterRecent">الأحدث</span></button>
+                <button class="filter-btn" data-filter="price-low"><span id="filterPriceLow">الأرخص</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GALLERY -->
+    <main class="gallery-container">
+        <div class="container">
+            <div id="productsList" class="products-grid">
+                <div class="loading-spinner">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                    <span id="loadingText">جارٍ تحميل المعرض...</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- CONTACT FLOATING BUTTONS -->
+    <div class="contact-hub">
+        <a href="https://wa.me/201000108744" target="_blank" class="hub-btn whatsapp" title="WhatsApp" aria-label="تواصل عبر WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+        <a href="mailto:ali_elnagmy@yahoo.com" class="hub-btn email" title="Email" aria-label="أرسل بريد إلكتروني">
+            <i class="fas fa-envelope"></i>
+        </a>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="toast"></div>
+
+    <!-- SCRIPTS -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="script-enhanced.js"></script>
+</body>
+</html>

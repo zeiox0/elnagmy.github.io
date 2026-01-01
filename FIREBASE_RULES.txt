@@ -1,0 +1,21 @@
+// --- تعليمات هامة جداً ---
+// 1. اذهب إلى Firebase Console
+// 2. اختر Firestore Database من القائمة الجانبية
+// 3. اضغط على تبويب Rules
+// 4. امسح كل شيء هناك وضع الكود التالي (مع استبدال الإيميلات):
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /products/{product} {
+      // الجميع يمكنهم رؤية المنتجات
+      allow read: if true;
+      
+      // التعديل مسموح فقط للإيميلات المحددة
+      // استبدل "your-email@example.com" بإيميلك الحقيقي الذي تسجل به الدخول
+      allow write, update, delete: if request.auth != null && 
+        (request.auth.token.email == "your-email@example.com" || 
+         request.auth.token.email == "ali_elnagmy@yahoo.com");
+    }
+  }
+}
