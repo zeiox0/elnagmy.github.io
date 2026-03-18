@@ -16,18 +16,22 @@ const db = firebase.firestore();
 
 // 2. المتغيرات العامة
 let currentLang = 'ar';
-window.isAdmin = false; // جعل المتغير عالمياً ليتوافق مع auth.js
+window.isAdmin = false;
 let editingId = null;
 let currentCurrency = 'USD';
 
 // متغيرات الصور
-let mainImage = null; // الصورة الرئيسية (كائن واحد)
-let subImages = [];   // الصور الفرعية (مصفوفة كائنات)
+let mainImage = null;
+let subImages = [];
 let imageEditor = null;
 
 // متغيرات التحقق من أبعاد الصور
-const RECOMMENDED_ASPECT_RATIO = 1; // نسبة العرض إلى الارتفاع المثالية (1:1)
-const ASPECT_RATIO_TOLERANCE = 0.15; // تسامح 15% من النسبة المثالية
+const RECOMMENDED_ASPECT_RATIO = 1;
+const ASPECT_RATIO_TOLERANCE = 0.15;
+
+// متغيرات القوالب والألوان
+let currentTheme = localStorage.getItem('theme') || 'dark';
+let customAccentColor = localStorage.getItem('accentColor') || '#c5a059';
 
 const exchangeRates = { USD: 1, EGP: 50, SAR: 3.75, AED: 3.67 };
 const currencySymbols = { USD: '$', EGP: 'ج.م', SAR: 'ر.س', AED: 'د.إ' };
@@ -65,7 +69,51 @@ const langData = {
     }
 };
 
-// 3. التبديل بين اللغات
+// 3. نظام القوالب والألوان
+function initTheme() {
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    applyCustomAccentColor(customAccentColor);
+}
+
+function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', currentTheme);
+    document.documentElement.setAttribute('data-theme', currentTheme);
+}
+
+function applyCustomAccentColor(color) {
+    customAccentColor = color;
+    localStorage.setItem('accentColor', color);
+    document.documentElement.style.setProperty('--custom-accent', color);
+    
+    // حساب لون التوهج بناءً على اللون المختار
+    const rgb = hexToRgb(color);
+    const glowColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)`;
+    document.documentElement.style.setProperty('--custom-accent-glow', glowColor);
+}
+
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : { r: 197, g: 160, b: 89 };
+}
+
+// الألوان المسبقة
+const presetColors = [
+    '#c5a059', // الذهبي الأصلي
+    '#e74c3c', // أحمر
+    '#3498db', // أزرق
+    '#2ecc71', // أخضر
+    '#9b59b6', // بنفسجي
+    '#f39c12', // برتقالي
+    '#1abc9c', // فيروزي
+    '#34495e'  // رمادي داكن
+];
+
+// 4. التبديل بين اللغات
 document.getElementById('langBtn').addEventListener('click', () => {
     currentLang = currentLang === 'ar' ? 'en' : 'ar';
     const doc = document.documentElement;
@@ -77,7 +125,7 @@ document.getElementById('langBtn').addEventListener('click', () => {
     renderProducts();
 });
 
-// 4. نظام الأدمن
+// 5. نظام الأدمن
 const adminPanel = document.getElementById('adminPanel');
 const adminBtn = document.getElementById('adminBtn');
 const adminToggleBtn = document.getElementById('adminToggleBtn');
@@ -108,9 +156,8 @@ document.getElementById('closeAdmin').addEventListener('click', () => {
     adminPanel.style.display = 'none';
 });
 
-// 5. معالجة الصور (رفع ومعاينة وتعديل)
+// 6. معالجة الصور (رفع ومعاينة وتعديل)
 
-// دالة لضغط الصورة قبل الرفع لتجنب تجاوز حد Firestore (1MB)
 function compressImage(base64Str, maxWidth = 800, maxHeight = 800, quality = 0.7) {
     return new Promise((resolve) => {
         const img = new Image();
@@ -141,7 +188,6 @@ function compressImage(base64Str, maxWidth = 800, maxHeight = 800, quality = 0.7
     });
 }
 
-// دالة للتحقق من أبعاد الصورة
 function validateImageDimensions(imageData) {
     return new Promise((resolve) => {
         const img = new Image();
@@ -168,7 +214,6 @@ function validateImageDimensions(imageData) {
     });
 }
 
-// دالة لفتح محرر الصور مع رسالة التحقق
 async function validateAndEditImage(imageId, imageData) {
     const validation = await validateImageDimensions(imageData);
     
@@ -186,7 +231,6 @@ async function validateAndEditImage(imageId, imageData) {
     }
 }
 
-// رفع الصورة الرئيسية
 document.getElementById('pMainImage').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -202,7 +246,6 @@ document.getElementById('pMainImage').addEventListener('change', function(e) {
     reader.readAsDataURL(file);
 });
 
-// رفع الصور الفرعية
 document.getElementById('pSubImages').addEventListener('change', function(e) {
     const files = Array.from(e.target.files);
     files.forEach((file, index) => {
@@ -253,7 +296,6 @@ window.removeImage = function(id) {
     renderPreviews();
 };
 
-// محرر الصور (Filerobot)
 window.openEditor = function(id) {
     let targetImg = (mainImage && mainImage.id === id) ? mainImage : subImages.find(img => img.id === id);
     if (!targetImg) return;
@@ -287,7 +329,11 @@ window.openEditor = function(id) {
         annotationsCommon: { fill: '#ff0000' },
         Text: { text: 'ELNAGMY' },
         Rotate: { angle: 90, componentType: 'slider' },
-        translations: currentLang === 'ar' ? { 'header.save': 'حفظ', 'header.close': 'إغلاق' } : {}
+        translations: currentLang === 'ar' ? {
+            'header.save': 'حفظ',
+            'header.cancel': 'إلغاء',
+            'header.back': 'رجوع'
+        } : {}
     };
     
     imageEditor = new Filerobot(container, config);
@@ -298,7 +344,7 @@ window.closeImageEditor = function() {
     document.getElementById('imageEditorModal').style.display = 'none';
 };
 
-// 6. إضافة أو تعديل منتج
+// 7. إضافة أو تعديل منتج
 document.getElementById('addBtn').addEventListener('click', () => {
     const nameAr = document.getElementById('pNameAr').value;
     const nameEn = document.getElementById('pNameEn').value;
@@ -315,10 +361,8 @@ document.getElementById('addBtn').addEventListener('click', () => {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
 
-    // ضغط الصور قبل الإرسال لتجنب تجاوز حد Firestore (1MB)
     const processAndSave = async () => {
         try {
-            // التحقق من تسجيل الدخول قبل البدء
             const user = firebase.auth().currentUser;
             if (!user) {
                 alert(currentLang === 'ar' ? "يجب تسجيل الدخول أولاً!" : "You must login first!");
@@ -401,7 +445,7 @@ window.editProduct = function(id) {
     document.getElementById('addBtn').innerHTML = 'تحديث المنتج <i class="fas fa-edit"></i>';
 };
 
-// 7. عرض المنتجات
+// 8. عرض المنتجات
 let productsSnapshot = []; 
 db.collection("products").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
     productsSnapshot = snapshot;
@@ -449,7 +493,7 @@ function renderProducts() {
     });
 }
 
-// 8. مودال التفاصيل ومعرض الصور
+// 9. مودال التفاصيل ومعرض الصور
 let currentGalleryImages = [];
 let currentImgIndex = 0;
 let currentProductId = null;
@@ -523,7 +567,7 @@ document.getElementById('nextImg').onclick = () => {
 
 document.getElementById('closeModal').onclick = () => { document.getElementById('detailsModal').style.display = 'none'; };
 
-// 9. صندوق عرض الصور (Lightbox)
+// 10. صندوق عرض الصور (Lightbox)
 let lightboxImages = [];
 let lightboxIndex = 0;
 
@@ -595,3 +639,66 @@ window.toggleCurrency = function() {
     document.getElementById('currencyBtn').innerHTML = `<i class="fas fa-coins"></i> ${currentCurrency}`;
     renderProducts();
 };
+
+// 11. نظام تخصيص القوالب والألوان
+window.openThemeCustomizer = function() {
+    const modal = document.getElementById('customizerModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+};
+
+window.closeThemeCustomizer = function() {
+    const modal = document.getElementById('customizerModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+};
+
+window.setTheme = function(theme) {
+    currentTheme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    document.querySelectorAll('.theme-option').forEach(opt => {
+        opt.classList.remove('active');
+    });
+    document.querySelector(`[data-theme-value="${theme}"]`).classList.add('active');
+};
+
+window.setAccentColor = function(color) {
+    applyCustomAccentColor(color);
+    document.querySelectorAll('.preset-color').forEach(col => {
+        col.classList.remove('active');
+    });
+    document.querySelector(`[data-color="${color}"]`).classList.add('active');
+};
+
+window.applyCustomizerChanges = function() {
+    localStorage.setItem('theme', currentTheme);
+    localStorage.setItem('accentColor', customAccentColor);
+    closeThemeCustomizer();
+};
+
+window.resetCustomizer = function() {
+    currentTheme = 'dark';
+    customAccentColor = '#c5a059';
+    localStorage.removeItem('theme');
+    localStorage.removeItem('accentColor');
+    initTheme();
+    closeThemeCustomizer();
+};
+
+// تهيئة النظام عند التحميل
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+});
+
+// إغلاق المودالات عند النقر خارجها
+document.getElementById('detailsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        document.getElementById('detailsModal').style.display = 'none';
+    }
+});
+
+document.getElementById('imageEditorModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeImageEditor();
+    }
+});
